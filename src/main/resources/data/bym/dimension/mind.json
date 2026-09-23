@@ -1,0 +1,12 @@
+{
+  "type": "bym:mind",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "bym:the_mind",
+      "features": false,
+      "lakes": false,
+      "layers": []
+    }
+  }
+}

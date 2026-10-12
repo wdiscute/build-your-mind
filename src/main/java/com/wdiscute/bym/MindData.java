@@ -3,11 +3,14 @@ package com.wdiscute.bym;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.wdiscute.bym.registry.BYMDataAttachments;
+import com.wdiscute.bym.registry.BYMDataComponents;
 import com.wdiscute.bym.registry.BYMItems;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceKey;
@@ -16,6 +19,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -133,7 +137,7 @@ public record MindData(long timeToExit, List<MaybeStack> inventory, BlockPos pos
         swapInventory(player);
 
         //set last hotbar slot to paper
-        player.getInventory().setItem(8, BYMItems.PAPER.get().getDefaultInstance());
+        player.getInventory().setItem(8, Items.PAPER.getDefaultInstance());
 
         //set to creative
         player.setGameMode(GameType.CREATIVE);
@@ -169,13 +173,18 @@ public record MindData(long timeToExit, List<MaybeStack> inventory, BlockPos pos
         MindData data = player.getData(BYMDataAttachments.MIND_DATA);
 
         //get paper
-        ItemStack item = player.getInventory().getItem(8);
+        ItemStack paper = player.getInventory().getItem(8);
 
         //swap inventory
         swapInventory(player);
 
         //add paper
-        player.addItem(item);
+        ItemStack stackToGive = player.getData(BYMDataAttachments.ITEM).toStack();
+        stackToGive.set(BYMDataComponents.STORED_BUILD, paper.getOrDefault(BYMDataComponents.STORED_BUILD, StoredBuild.EMPTY));
+        String name = player.getData(BYMDataAttachments.ITEM_NAME);
+        if (!name.isEmpty())
+            stackToGive.set(DataComponents.ITEM_NAME, Component.literal(name));
+        player.addItem(stackToGive);
 
         //get timeless server level
         ServerLevel levelToReturn = player.level().getServer().getLevel(ResourceKey.create(Registries.DIMENSION, data.dimToExit));
